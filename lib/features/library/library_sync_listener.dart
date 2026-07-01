@@ -14,6 +14,8 @@ class LibrarySyncListener extends ConsumerStatefulWidget {
 
 class _LibrarySyncListenerState extends ConsumerState<LibrarySyncListener>
     with WidgetsBindingObserver {
+  AppLifecycleState? _lifecycleState;
+
   @override
   void initState() {
     super.initState();
@@ -31,7 +33,11 @@ class _LibrarySyncListenerState extends ConsumerState<LibrarySyncListener>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    final wasInBackground = _lifecycleState == AppLifecycleState.paused ||
+        _lifecycleState == AppLifecycleState.inactive ||
+        _lifecycleState == AppLifecycleState.hidden;
+    _lifecycleState = state;
+    if (state == AppLifecycleState.resumed && wasInBackground) {
       ref.read(librarySyncProvider.notifier).syncOnLaunch();
     }
   }

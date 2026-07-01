@@ -1,9 +1,9 @@
 ﻿import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'package:bookshelf/data/services/saf_directory_access.dart';
 import 'package:bookshelf/data/services/saf_storage_helper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
-import 'package:saf/saf.dart';
 
 class ScannedPdf {
   const ScannedPdf({
@@ -30,17 +30,35 @@ abstract final class DirectoryPdfScanner {
   static Future<DirectoryScanResult> scan(
     String rootPath, {
     bool recursive = true,
+    String? treeUri,
   }) async {
     if (!kIsWeb && Platform.isAndroid) {
-      return _scanAndroid(rootPath);
+      return _scanAndroid(rootPath, treeUri: treeUri);
     }
     return _scanFileSystem(rootPath, recursive: recursive);
   }
 
-  static Future<DirectoryScanResult> _scanAndroid(String rootPath) async {
+  static Future<DirectoryScanResult> _scanAndroid(
+    String rootPath, {
+    String? treeUri,
+  }) async {
     try {
       final safPath = SafStorageHelper.toSafStoragePath(rootPath);
-      final paths = await Saf.getFilesPathFor(safPath, fileType: 'application');
+      final resolvedTreeUri = await SafDirectoryAccess.resolveTreeUri(
+        directoryPath: safPath,
+        storedTreeUri: treeUri,
+      );
+      if (resolvedTreeUri == null) {
+        return const DirectoryScanResult(
+          pdfs: [],
+          errorMessage: 'フォルダへのアクセス権がありません。設定でフォルダを選び直してください。',
+        );
+      }
+
+      final paths = await SafDirectoryAccess.listFilePaths(
+        directoryPath: safPath,
+        treeUri: resolvedTreeUri,
+      );
       if (paths == null) {
         return const DirectoryScanResult(
           pdfs: [],

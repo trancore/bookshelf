@@ -35,6 +35,13 @@ class LibraryRepository {
     return _db.select(_db.tags).watch();
   }
 
+  Future<bool> existsByFileName(String fileName) async {
+    final existing = await (_db.select(_db.books)
+          ..where((t) => t.fileName.equals(fileName)))
+        .getSingleOrNull();
+    return existing != null;
+  }
+
   Future<bool> existsByFileNameAndSize(String fileName, int fileSizeBytes) async {
     final existing = await (_db.select(_db.books)
           ..where(

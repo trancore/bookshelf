@@ -124,6 +124,13 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
           const LibraryTagFilterBar(),
           if (syncState.isSyncing && settings.hasDefaultDirectory)
             const _LibrarySyncBanner(),
+          if (!syncState.isSyncing &&
+              syncState.lastError != null &&
+              settings.hasDefaultDirectory)
+            _LibrarySyncErrorBanner(
+              message: syncState.lastError!,
+              onOpenSettings: () => context.pushNamed('settings'),
+            ),
           Expanded(
             child: booksAsync.when(
               data: (books) {
@@ -197,6 +204,57 @@ class _LibrarySyncBanner extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LibrarySyncErrorBanner extends StatelessWidget {
+  const _LibrarySyncErrorBanner({
+    required this.message,
+    this.onOpenSettings,
+  });
+
+  final String message;
+  final VoidCallback? onOpenSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final needsReauth = message.contains('選び直');
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Material(
+        color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.85),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.error_outline,
+                size: 18,
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'フォルダの自動読み込みに失敗しました: $message',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onErrorContainer,
+                      ),
+                ),
+              ),
+              if (needsReauth && onOpenSettings != null) ...[
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: onOpenSettings,
+                  child: const Text('設定'),
+                ),
+              ],
             ],
           ),
         ),

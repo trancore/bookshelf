@@ -80,10 +80,10 @@ class ImportService {
     bool recursive = true,
     void Function(DirectoryImportProgress progress)? onProgress,
   }) async {
-    final directoryPath = await DirectoryPickerService.pickDirectory(
+    final picked = await DirectoryPickerService.pickDirectory(
       dialogTitle: 'PDFフォルダを選択',
     );
-    if (directoryPath == null) {
+    if (picked == null) {
       return const DirectoryImportSummary(
         directoryPath: '',
         foundCount: 0,
@@ -94,7 +94,8 @@ class ImportService {
       );
     }
     return importPdfsFromDirectory(
-      directoryPath,
+      picked.path,
+      treeUri: picked.treeUri,
       recursive: recursive,
       onProgress: onProgress,
     );
@@ -102,6 +103,7 @@ class ImportService {
 
   Future<DirectoryImportSummary> importPdfsFromDirectory(
     String directoryPath, {
+    String? treeUri,
     bool recursive = true,
     void Function(DirectoryImportProgress progress)? onProgress,
   }) async {
@@ -113,6 +115,7 @@ class ImportService {
     final scan = await DirectoryPdfScanner.scan(
       directoryPath,
       recursive: recursive,
+      treeUri: treeUri,
     );
 
     if (scan.pdfs.isEmpty) {
@@ -152,6 +155,7 @@ class ImportService {
         originalFileName: item.relativePath,
         duplicateKey: item.relativePath,
         safRootDirectory: directoryPath,
+        safRootTreeUri: treeUri,
         skipPdfMetadata: true,
         skipThumbnail: true,
       );
@@ -206,6 +210,7 @@ class ImportService {
     String? originalFileName,
     String? duplicateKey,
     String? safRootDirectory,
+    String? safRootTreeUri,
     bool skipPdfMetadata = false,
     bool skipThumbnail = false,
   }) async {
@@ -217,6 +222,7 @@ class ImportService {
       var fileSize = await _sourceFileSize(
         sourcePath,
         safRootDirectory: safRootDirectory,
+        safRootTreeUri: safRootTreeUri,
       );
 
       final bookId = _uuid.v4();
@@ -227,6 +233,7 @@ class ImportService {
         sourcePath: sourcePath,
         destPath: destPath,
         safRootDirectory: safRootDirectory,
+        safRootTreeUri: safRootTreeUri,
         onTempPath: (temp) => tempReadablePath = temp,
       );
       if (!copied) {
@@ -294,6 +301,7 @@ class ImportService {
     required String sourcePath,
     required String destPath,
     String? safRootDirectory,
+    String? safRootTreeUri,
     void Function(String tempPath)? onTempPath,
   }) async {
     if (!kIsWeb && Platform.isAndroid) {
@@ -304,12 +312,14 @@ class ImportService {
           sourcePath: sourcePath,
           destPath: destPath,
           treeRootPath: safRootDirectory,
+          treeUri: safRootTreeUri,
         );
         if (ok) return true;
 
         final temp = await SafStorageHelper.materializeReadablePath(
           sourcePath,
           treeRootPath: safRootDirectory,
+          treeUri: safRootTreeUri,
         );
         if (temp == null) return false;
         onTempPath?.call(temp);
@@ -327,6 +337,7 @@ class ImportService {
   Future<int?> _sourceFileSize(
     String sourcePath, {
     String? safRootDirectory,
+    String? safRootTreeUri,
   }) async {
     if (!kIsWeb && Platform.isAndroid) {
       final needsSaf =
@@ -335,6 +346,7 @@ class ImportService {
         return SafStorageHelper.documentLengthBytes(
           sourcePath,
           treeRootPath: safRootDirectory,
+          treeUri: safRootTreeUri,
         );
       }
     }

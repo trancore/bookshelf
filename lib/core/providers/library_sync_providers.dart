@@ -14,6 +14,7 @@ final librarySyncCacheRepositoryProvider = Provider<LibrarySyncCacheRepository>(
 final librarySyncServiceProvider = Provider<LibrarySyncService>((ref) {
   return LibrarySyncService(
     importService: ref.watch(importServiceProvider),
+    libraryRepository: ref.watch(libraryRepositoryProvider),
     cacheRepository: ref.watch(librarySyncCacheRepositoryProvider),
   );
 });
@@ -36,26 +37,35 @@ class LibrarySyncNotifier extends Notifier<LibrarySyncState> {
 
     await syncFromDefaultDirectory(
       directoryPath: settings.defaultDirectoryPath!,
+      treeUri: settings.defaultDirectoryTreeUri,
       recursive: settings.defaultDirectoryRecursive,
+      force: true,
     );
   }
 
   Future<void> syncFromDefaultDirectory({
     required String directoryPath,
+    String? treeUri,
     bool recursive = true,
+    bool force = false,
   }) async {
     if (_activeSync != null) {
       return _activeSync;
     }
 
     final now = DateTime.now();
-    if (_lastSyncStartedAt != null &&
+    if (!force &&
+        _lastSyncStartedAt != null &&
         now.difference(_lastSyncStartedAt!) < _minSyncInterval) {
       return;
     }
 
     _lastSyncStartedAt = now;
-    _activeSync = _runSync(directoryPath: directoryPath, recursive: recursive);
+    _activeSync = _runSync(
+      directoryPath: directoryPath,
+      treeUri: treeUri,
+      recursive: recursive,
+    );
     try {
       await _activeSync;
     } finally {
@@ -65,6 +75,7 @@ class LibrarySyncNotifier extends Notifier<LibrarySyncState> {
 
   Future<void> _runSync({
     required String directoryPath,
+    String? treeUri,
     required bool recursive,
   }) async {
     state = state.copyWith(isSyncing: true, clearError: true);
@@ -72,6 +83,7 @@ class LibrarySyncNotifier extends Notifier<LibrarySyncState> {
     try {
       final result = await ref.read(librarySyncServiceProvider).syncFromDirectory(
             directoryPath,
+            treeUri: treeUri,
             recursive: recursive,
           );
 

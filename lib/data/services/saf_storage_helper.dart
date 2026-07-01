@@ -32,6 +32,7 @@ abstract final class SafStorageHelper {
   static Future<int?> documentLengthBytes(
     String sourcePath, {
     String? treeRootPath,
+    String? treeUri,
   }) async {
     if (kIsWeb || !Platform.isAndroid) {
       final file = File(sourcePath);
@@ -43,6 +44,7 @@ abstract final class SafStorageHelper {
       return await _channel.invokeMethod<int>('documentLength', {
         'sourcePath': sourcePath,
         'treeRootPath': treeRootPath,
+        'treeUri': treeUri,
       });
     } on PlatformException {
       return null;
@@ -54,6 +56,7 @@ abstract final class SafStorageHelper {
     required String sourcePath,
     required String destPath,
     String? treeRootPath,
+    String? treeUri,
   }) async {
     if (kIsWeb || !Platform.isAndroid) return false;
 
@@ -61,6 +64,7 @@ abstract final class SafStorageHelper {
       await _channel.invokeMethod<void>('copyPathToFile', {
         'sourcePath': sourcePath,
         'treeRootPath': treeRootPath,
+        'treeUri': treeUri,
         'destPath': destPath,
       });
       return true;
@@ -73,6 +77,7 @@ abstract final class SafStorageHelper {
   static Future<bool> deleteFile({
     required String sourcePath,
     String? treeRootPath,
+    String? treeUri,
   }) async {
     if (kIsWeb) return false;
 
@@ -81,6 +86,7 @@ abstract final class SafStorageHelper {
         await _channel.invokeMethod<void>('deleteDocument', {
           'sourcePath': sourcePath,
           'treeRootPath': treeRootPath,
+          'treeUri': treeUri,
         });
         return true;
       } on PlatformException {
@@ -98,6 +104,7 @@ abstract final class SafStorageHelper {
   static Future<String?> materializeReadablePath(
     String sourcePath, {
     String? treeRootPath,
+    String? treeUri,
   }) async {
     if (kIsWeb || !Platform.isAndroid) return null;
 
@@ -110,6 +117,7 @@ abstract final class SafStorageHelper {
       sourcePath: sourcePath,
       destPath: destPath,
       treeRootPath: treeRootPath,
+      treeUri: treeUri,
     );
     if (!ok) {
       try {

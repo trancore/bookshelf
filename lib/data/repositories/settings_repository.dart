@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsRepository {
   static const _keyDefaultDirectory = 'default_directory_path';
+  static const _keyDefaultDirectoryTreeUri = 'default_directory_tree_uri';
   static const _keyDefaultDirectoryRecursive = 'default_directory_recursive';
   static const _keyLibraryViewMode = 'library_view_mode';
   static const _keyLibrarySortOrder = 'library_sort_order';
@@ -21,6 +22,7 @@ class SettingsRepository {
     final prefs = await _prefs();
     return AppSettings(
       defaultDirectoryPath: prefs.getString(_keyDefaultDirectory),
+      defaultDirectoryTreeUri: prefs.getString(_keyDefaultDirectoryTreeUri),
       defaultDirectoryRecursive: prefs.getBool(_keyDefaultDirectoryRecursive) ?? true,
       libraryViewMode: LibraryViewMode.fromStorage(prefs.getString(_keyLibraryViewMode)),
       librarySortOrder: LibrarySortOrder.fromStorage(
@@ -49,8 +51,18 @@ class SettingsRepository {
     final prefs = await _prefs();
     if (settings.hasDefaultDirectory) {
       await prefs.setString(_keyDefaultDirectory, settings.defaultDirectoryPath!);
+      if (settings.defaultDirectoryTreeUri != null &&
+          settings.defaultDirectoryTreeUri!.isNotEmpty) {
+        await prefs.setString(
+          _keyDefaultDirectoryTreeUri,
+          settings.defaultDirectoryTreeUri!,
+        );
+      } else {
+        await prefs.remove(_keyDefaultDirectoryTreeUri);
+      }
     } else {
       await prefs.remove(_keyDefaultDirectory);
+      await prefs.remove(_keyDefaultDirectoryTreeUri);
     }
     await prefs.setBool(_keyDefaultDirectoryRecursive, settings.defaultDirectoryRecursive);
     await prefs.setString(_keyLibraryViewMode, settings.libraryViewMode.storageKey);

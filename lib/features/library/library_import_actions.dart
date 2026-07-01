@@ -33,16 +33,21 @@ class LibraryImportActions {
     }
   }
 
-  Future<void> importFromDirectory({String? directoryPath}) async {
+  Future<void> importFromDirectory({String? directoryPath, String? treeUri}) async {
     if (isImporting) return;
 
-    final path = directoryPath ??
-        await DirectoryPickerService.pickDirectory(
-          dialogTitle: 'PDFフォルダを選択',
-        );
-    if (!context.mounted || path == null) return;
+    if (directoryPath != null) {
+      if (!context.mounted) return;
+      await _runDirectoryImport(directoryPath, treeUri: treeUri);
+      return;
+    }
 
-    await _runDirectoryImport(path);
+    final picked = await DirectoryPickerService.pickDirectory(
+      dialogTitle: 'PDFフォルダを選択',
+    );
+    if (!context.mounted || picked == null) return;
+
+    await _runDirectoryImport(picked.path, treeUri: picked.treeUri);
   }
 
   Future<void> importFromDefaultDirectory() async {
@@ -53,7 +58,10 @@ class LibraryImportActions {
       );
       return;
     }
-    await importFromDirectory(directoryPath: settings.defaultDirectoryPath);
+    await importFromDirectory(
+      directoryPath: settings.defaultDirectoryPath,
+      treeUri: settings.defaultDirectoryTreeUri,
+    );
   }
 
   void showImportOptionsSheet() {
@@ -103,7 +111,7 @@ class LibraryImportActions {
     );
   }
 
-  Future<void> _runDirectoryImport(String directoryPath) async {
+  Future<void> _runDirectoryImport(String directoryPath, {String? treeUri}) async {
     if (isImporting) return;
 
     setImporting(true);
@@ -121,6 +129,7 @@ class LibraryImportActions {
     try {
       final summary = await ref.read(importServiceProvider).importPdfsFromDirectory(
             directoryPath,
+            treeUri: treeUri,
             recursive: true,
             onProgress: (value) => progress.value = value,
           );

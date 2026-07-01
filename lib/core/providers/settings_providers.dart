@@ -29,10 +29,14 @@ class AppSettingsNotifier extends Notifier<AppSettings> {
     await ref.read(settingsRepositoryProvider).save(state);
   }
 
-  Future<void> setDefaultDirectory(String? path) async {
+  Future<void> setDefaultDirectory(
+    String? path, {
+    String? treeUri,
+  }) async {
     final previousPath = state.defaultDirectoryPath;
     state = state.copyWith(
       defaultDirectoryPath: path,
+      defaultDirectoryTreeUri: treeUri,
       clearDefaultDirectory: path == null || path.isEmpty,
     );
     await _persist();
@@ -43,6 +47,7 @@ class AppSettingsNotifier extends Notifier<AppSettings> {
         // ignore: unawaited_futures
         ref.read(librarySyncProvider.notifier).syncFromDefaultDirectory(
               directoryPath: path,
+              treeUri: treeUri ?? state.defaultDirectoryTreeUri,
               recursive: state.defaultDirectoryRecursive,
             );
       }

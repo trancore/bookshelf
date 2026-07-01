@@ -46,6 +46,7 @@ enum AppThemePreference {
 class AppSettings {
   const AppSettings({
     this.defaultDirectoryPath,
+    this.defaultDirectoryTreeUri,
     this.defaultDirectoryRecursive = true,
     this.libraryViewMode = LibraryViewMode.bookshelf,
     this.librarySortOrder = LibrarySortOrder.recentlyOpened,
@@ -54,6 +55,7 @@ class AppSettings {
   });
 
   final String? defaultDirectoryPath;
+  final String? defaultDirectoryTreeUri;
   final bool defaultDirectoryRecursive;
   final LibraryViewMode libraryViewMode;
   final LibrarySortOrder librarySortOrder;
@@ -67,6 +69,7 @@ class AppSettings {
 
   AppSettings copyWith({
     String? defaultDirectoryPath,
+    String? defaultDirectoryTreeUri,
     bool clearDefaultDirectory = false,
     bool? defaultDirectoryRecursive,
     LibraryViewMode? libraryViewMode,
@@ -78,6 +81,9 @@ class AppSettings {
       defaultDirectoryPath: clearDefaultDirectory
           ? null
           : (defaultDirectoryPath ?? this.defaultDirectoryPath),
+      defaultDirectoryTreeUri: clearDefaultDirectory
+          ? null
+          : (defaultDirectoryTreeUri ?? this.defaultDirectoryTreeUri),
       defaultDirectoryRecursive:
           defaultDirectoryRecursive ?? this.defaultDirectoryRecursive,
       libraryViewMode: libraryViewMode ?? this.libraryViewMode,

@@ -247,12 +247,15 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   Future<void> _pickDefaultDirectory(BuildContext context, WidgetRef ref) async {
-    final path = await DirectoryPickerService.pickDirectory(
+    final picked = await DirectoryPickerService.pickDirectory(
       dialogTitle: 'デフォルトの PDF フォルダ',
     );
-    if (path == null || !context.mounted) return;
+    if (picked == null || !context.mounted) return;
 
-    await ref.read(appSettingsProvider.notifier).setDefaultDirectory(path);
+    await ref.read(appSettingsProvider.notifier).setDefaultDirectory(
+          picked.path,
+          treeUri: picked.treeUri,
+        );
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('デフォルトフォルダを保存しました')),
